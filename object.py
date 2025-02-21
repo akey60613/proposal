@@ -35,7 +35,7 @@ class UAV(CommunicationEntity):
             x = random.randint(bs.x - bs.range, bs.x + bs.range)
             y = random.randint(bs.y - bs.range, bs.y + bs.range)
             
-            if distance((x, y), (bs.x, bs.y)) <= bs.range:
+            if distance((x, y), (bs.x, bs.y)) <= bs.range: #讓UAV跟RSU或UAV之間的範圍不要重疊
                 if all(distance((x, y), (r.x, r.y)) > r.range + uav_range for r in existing_rsus):
                     if all(distance((x, y), (u.x, u.y)) > u.range + uav_range for u in existing_uavs):
                         super().__init__(uav_id, x, y, random.randint(50, 150), uav_range)
@@ -51,7 +51,7 @@ class RSU(CommunicationEntity):
             x = random.randint(bs.x - bs.range, bs.x + bs.range)
             y = random.randint(bs.y - bs.range, bs.y + bs.range)
 
-            if distance((x, y), (bs.x, bs.y)) <= bs.range:
+            if distance((x, y), (bs.x, bs.y)) <= bs.range:#讓RSU跟RSU或UAV之間的範圍不要重疊
                 if all(distance((x, y), (r.x, r.y)) > r.range + rsu_range for r in existing_rsus):
                     super().__init__(rsu_id, x, y, 0, rsu_range)
                     return
@@ -72,7 +72,7 @@ class Vehicle(CommunicationEntity):
         """ 找到最近的設備 (BS、UAV、RSU)，並確認是否在通訊範圍內 """
         candidates = [(bs, distance((self.x, self.y), (bs.x, bs.y)))]  # 先加入 BS
         
-        for uav in uavs:
+        for uav in uavs:#先把所有設備加入candidates內
             candidates.append((uav, distance((self.x, self.y), (uav.x, uav.y))))
         
         for rsu in rsus:
@@ -86,7 +86,7 @@ class Vehicle(CommunicationEntity):
             if dist <= entity.range:
                 return entity
 
-        return sat  # 如果沒有可連接的設備，回傳 None
+        return sat  # 如果沒有可連接的設備，回傳 Sat
 
 
 # 環境類別
@@ -95,7 +95,7 @@ class Environment:
         self.sat = Satellite(0, 0, 0, 5000)
         self.bs = BaseStation(0, 500, 500, 300)
 
-        self.rsus = []
+        self.rsus = []#部屬設備
         for i in range(num_rsus):
             rsu = RSU(i, self.bs, self.rsus, rsu_range=100)
             if isinstance(rsu, RSU) and hasattr(rsu, 'id'):
@@ -126,7 +126,7 @@ class Environment:
             print(vehicle, connection_str)
 
 
-    def plot_environment(self):
+    def plot_environment(self):#製圖
         fig, ax = plt.subplots(figsize=(8, 8))
         ax.set_xlim(0, 1000)
         ax.set_ylim(0, 1000)
