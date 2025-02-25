@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<edges>
+    <edge id="A_B" from="A" to="B"/>
+    <edge id="B_A" from="B" to="A"/>
+    <edge id="A_C" from="A" to="C"/>
+    <edge id="C_A" from="C" to="A"/>
+    <edge id="A_D" from="A" to="D"/>
+    <edge id="D_A" from="D" to="A"/>
+    <edge id="A_E" from="A" to="E"/>
+    <edge id="E_A" from="E" to="A"/>
+</edges>

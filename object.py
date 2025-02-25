@@ -1,8 +1,13 @@
 import random
 import matplotlib.pyplot as plt
 from math import sqrt
-
+import traci
+import sumolib
+import xml.etree.ElementTree as ET
+import matplotlib.pyplot as plt
 # 計算兩點距離的函數
+
+
 def distance(p1, p2):
     return sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
@@ -61,13 +66,26 @@ class RSU(CommunicationEntity):
 # 車輛 (Vehicle)，可以隨機分佈在 BS 內或 BS 外
 class Vehicle(CommunicationEntity):
     def __init__(self, vehicle_id,sat, bs, existing_vehicles, existing_uavs, existing_rsus, vehicle_range):
-        x = random.randint(0, 1000)
-        y = random.randint(0, 1000)
-        super().__init__(vehicle_id, x, y, 0, vehicle_range)
+        # x = random.randint(0, 1000)
+        # y = random.randint(0, 1000)
+        #設定 SUMO 指令
+        sumo_cmd = ["sumo", "-c", "simulation.sumocfg"]  # 如果不要 GUI, 改成 "sumo"
+        # 啟動 SUMO
+        traci.start(sumo_cmd)
+
+        # **執行 SUMO 到第 0 秒**
+        traci.simulationStep()  # 讓 SUMO 前進到第 0 秒
+        sumo_vehicles = traci.vehicle.getIDList()  # 獲取目前模擬中的車輛 ID
+        vehicle_positions = [(traci.vehicle.getPosition(veh_id)[0], traci.vehicle.getPosition(veh_id)[1], 0) for veh_id in sumo_vehicles]  # 紀錄車輛位置，z=0
+
+        for i, v_pos in enumerate(vehicle_positions):
+            super().__init__(i,v_pos[0],v_pos[1],v_pos[2],vehicle_range)
 
         # 紀錄車輛連接的設備
         self.connected_to = self.find_nearest_connection(sat,bs, existing_uavs, existing_rsus)
-
+        # 關閉 SUMO
+        traci.close()
+        print("SUMO simulation ended.")
     def find_nearest_connection(self,sat, bs, uavs, rsus):
         """ 找到最近的設備 (BS、UAV、RSU)，並確認是否在通訊範圍內 """
         candidates = [(bs, distance((self.x, self.y), (bs.x, bs.y)))]  # 先加入 BS
@@ -91,7 +109,7 @@ class Vehicle(CommunicationEntity):
 
 # 環境類別
 class Environment:
-    def __init__(self, num_uavs, num_rsus, num_vehicles):
+    def __init__(self, num_uavs, num_rsus):
         self.sat = Satellite(0, 0, 0, 5000)
         self.bs = BaseStation(0, 500, 500, 300)
 
@@ -108,10 +126,14 @@ class Environment:
                 self.uavs.append(uav)
 
         self.vehicles = []
-        for i in range(num_vehicles):
+        for i in range(1):
             vehicle = Vehicle(i,self.sat,self.bs, self.vehicles, self.uavs, self.rsus, vehicle_range=50)
             if isinstance(vehicle, Vehicle) and hasattr(vehicle, 'id'):
                 self.vehicles.append(vehicle)
+
+
+
+
 
     def display_environment(self):
         print(self.sat)
@@ -154,6 +176,7 @@ class Environment:
         plt.legend()
         plt.show()# 測試環境
 
-env = Environment(num_uavs=3, num_rsus=3, num_vehicles=5)
+
+env = Environment(num_uavs=3, num_rsus=3)
 env.display_environment()
 env.plot_environment()
